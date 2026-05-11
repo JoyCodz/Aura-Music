@@ -24,14 +24,29 @@ export default function Sidebar() {
     if (!window.ytClient) return;
     try {
       const playlist = await window.ytClient.getPlaylistTracks(playlistId);
-      if (playlist?.tracks?.length > 0) {
-        const firstTrack = playlist.tracks[0];
+      console.log('Sidebar playlist data:', JSON.stringify(playlist, null, 2));
+
+      let tracks = [];
+      if (Array.isArray(playlist)) {
+        tracks = playlist;
+      } else if (playlist?.tracks) {
+        tracks = playlist.tracks;
+      } else if (playlist?.songs) {
+        tracks = playlist.songs;
+      } else if (playlist?.videos) {
+        tracks = playlist.videos;
+      } else if (playlist?.results) {
+        tracks = playlist.results;
+      }
+
+      if (tracks && tracks.length > 0) {
+        const firstTrack = tracks.find(t => t.videoId) || tracks[0];
         const streamUrl = await window.ytClient.getStreamUrl(firstTrack.videoId);
         dispatch({
           type: 'PLAY_TRACK',
           payload: {
             track: { ...firstTrack, streamUrl },
-            queue: playlist.tracks,
+            queue: tracks,
           },
         });
       }

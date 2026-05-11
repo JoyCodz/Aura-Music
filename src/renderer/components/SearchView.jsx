@@ -131,14 +131,31 @@ export default function SearchView() {
     setLoading(true);
     try {
       const playlist = await window.ytClient.getPlaylistTracks(playlistId);
-      // Handle different return formats from yt-music-api
-      const tracks = playlist?.tracks || playlist?.songs || playlist?.videos || [];
+      console.log('Playlist data:', JSON.stringify(playlist, null, 2));
+
+      // Try multiple possible structures
+      let tracks = [];
+      if (Array.isArray(playlist)) {
+        tracks = playlist;
+      } else if (playlist?.tracks) {
+        tracks = playlist.tracks;
+      } else if (playlist?.songs) {
+        tracks = playlist.songs;
+      } else if (playlist?.videos) {
+        tracks = playlist.videos;
+      } else if (playlist?.results) {
+        tracks = playlist.results;
+      }
+
       if (tracks && tracks.length > 0) {
-        const streamUrl = await window.ytClient.getStreamUrl(tracks[0].videoId);
+        const track = tracks.find(t => t.videoId) || tracks[0];
+        const streamUrl = await window.ytClient.getStreamUrl(track.videoId);
         dispatch({
           type: 'PLAY_TRACK',
-          payload: { track: { ...tracks[0], streamUrl }, queue: tracks },
+          payload: { track: { ...track, streamUrl }, queue: tracks },
         });
+      } else {
+        console.log('No tracks found in playlist:', playlist);
       }
     } catch (err) {
       console.error('Play playlist error:', err);
