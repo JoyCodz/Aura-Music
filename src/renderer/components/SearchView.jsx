@@ -126,15 +126,17 @@ export default function SearchView() {
     }
   };
 
-  const playPlaylist = async (playlistId) => {
+  const playPlaylist = async (playlistId, playlistName = '') => {
     if (!window.ytClient) return;
     setLoading(true);
     try {
+      let tracks = [];
+
+      // Try to get playlist tracks directly
       const playlist = await window.ytClient.getPlaylistTracks(playlistId);
       console.log('Playlist data:', JSON.stringify(playlist, null, 2));
 
       // Try multiple possible structures
-      let tracks = [];
       if (Array.isArray(playlist)) {
         tracks = playlist;
       } else if (playlist?.tracks) {
@@ -145,6 +147,13 @@ export default function SearchView() {
         tracks = playlist.videos;
       } else if (playlist?.results) {
         tracks = playlist.results;
+      }
+
+      // If no tracks, search for the playlist name to get tracks
+      if ((!tracks || tracks.length === 0) && playlistName) {
+        console.log('No tracks in playlist, searching for:', playlistName);
+        const searchResults = await window.ytClient.search(playlistName);
+        tracks = searchResults.songs || [];
       }
 
       if (tracks && tracks.length > 0) {
@@ -462,7 +471,7 @@ export default function SearchView() {
                 <h3 className="section-title">Playlists</h3>
                 <div className="albums-grid">
                   {results.playlists.map((playlist, idx) => (
-                    <div key={playlist.playlistId || idx} className="album-card" onClick={() => playPlaylist(playlist.playlistId)}>
+                    <div key={playlist.playlistId || idx} className="album-card" onClick={() => playPlaylist(playlist.playlistId, playlist.title || playlist.name)}>
                       <div className="album-art">
                         <img
                           src={playlist.thumbnails?.[0]?.url || ''}
@@ -565,7 +574,7 @@ export default function SearchView() {
         {!loading && hasResults && activeTab === 'playlists' && (
           <div className="albums-grid">
             {results.playlists.map((playlist, idx) => (
-              <div key={playlist.playlistId || idx} className="album-card" onClick={() => playPlaylist(playlist.playlistId)}>
+              <div key={playlist.playlistId || idx} className="album-card" onClick={() => playPlaylist(playlist.playlistId, playlist.title || playlist.name)}>
                 <div className="album-art">
                   <img
                     src={playlist.thumbnails?.[0]?.url || ''}

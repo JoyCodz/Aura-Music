@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   const navigate = (view) => dispatch({ type: 'SET_VIEW', payload: view });
 
-  const playPlaylist = async (playlistId) => {
+  const playPlaylist = async (playlistId, playlistName = '') => {
     if (!window.ytClient) return;
     try {
       const playlist = await window.ytClient.getPlaylistTracks(playlistId);
@@ -37,6 +37,13 @@ export default function Sidebar() {
         tracks = playlist.videos;
       } else if (playlist?.results) {
         tracks = playlist.results;
+      }
+
+      // Fallback: search for playlist name if no tracks
+      if ((!tracks || tracks.length === 0) && playlistName) {
+        console.log('No tracks, searching for:', playlistName);
+        const searchResults = await window.ytClient.search(playlistName);
+        tracks = searchResults.songs || [];
       }
 
       if (tracks && tracks.length > 0) {
@@ -129,7 +136,7 @@ export default function Sidebar() {
             <button
               key={pl.playlistId || pl.id}
               className="playlist-item"
-              onClick={() => playPlaylist(pl.playlistId || pl.id)}
+              onClick={() => playPlaylist(pl.playlistId || pl.id, pl.title || pl.name)}
               title={pl.title || pl.name}
             >
               <div className="playlist-thumb">
