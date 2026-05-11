@@ -358,8 +358,8 @@ function registerIpcHandlers(streamPort) {
 
   ipcMain.handle('check-for-updates', async () => {
     try {
-      // Placeholder GitHub repo for the user's release page
-      const REPO = 'egohatela/aura-music';
+      // GitHub repo for update checks
+      const REPO = 'JoyCodz/Aura-Music';
       const response = await axios.get(`https://api.github.com/repos/${REPO}/releases/latest`, {
         headers: { 'User-Agent': 'AuraMusicApp' }
       });
