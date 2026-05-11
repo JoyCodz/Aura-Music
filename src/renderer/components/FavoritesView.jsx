@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLibrary } from '../store/LibraryContext.jsx';
 import { usePlayer } from '../store/PlayerContext.jsx';
 import TrackCard from './TrackCard.jsx';
@@ -7,6 +7,16 @@ export default function FavoritesView() {
   const { localFavorites, toggleFavorite } = useLibrary();
   const { dispatch } = usePlayer();
   const [viewMode, setViewMode] = useState('list');
+  const [scrolled, setScrolled] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current?.parentElement;
+    if (!container) return;
+    const handleScroll = () => setScrolled(container.scrollTop > 10);
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const playAll = async () => {
     if (!localFavorites || localFavorites.length === 0) return;
@@ -40,9 +50,28 @@ export default function FavoritesView() {
   };
 
   return (
-    <div className="music-section" style={{ padding: '24px' }}>
+    <div className="favorites-view" ref={containerRef} style={{ padding: '24px' }}>
       {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '8px',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        paddingTop: '16px',
+        paddingBottom: '16px',
+        marginTop: '-24px',
+        marginLeft: '-24px',
+        marginRight: '-24px',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        background: scrolled ? 'rgba(15, 15, 19, 0.95)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(10px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : 'none',
+        transition: 'all 0.2s ease'
+      }}>
         <div>
           <h1 style={{ margin: '0 0 4px 0', fontSize: '2rem', fontWeight: 800 }}>Local Favorites</h1>
           <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
@@ -51,13 +80,13 @@ export default function FavoritesView() {
         </div>
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div className="view-toggle">
-            <button 
+            <button
               className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
               onClick={() => setViewMode('grid')}
             >
               Grid
             </button>
-            <button 
+            <button
               className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
               onClick={() => setViewMode('list')}
             >

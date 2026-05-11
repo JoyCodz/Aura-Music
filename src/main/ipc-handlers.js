@@ -46,13 +46,30 @@ function registerIpcHandlers(streamPort) {
   });
 
   // --- Get Stream URL (Direct) ---
-  ipcMain.handle('get-stream-url', async (_, videoId) => {
+  ipcMain.handle('get-stream-url', async (_, videoId, quality) => {
     return new Promise((resolve, reject) => {
       const { exec } = require('child_process');
       const { getYtdlpPath } = require('./ytdlp-manager');
       const ytdlpPath = getYtdlpPath();
-      
-      exec(`"${ytdlpPath}" -g -f "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio" https://www.youtube.com/watch?v=${videoId}`, 
+
+      // Get quality from settings if not provided
+      let audioQuality = quality;
+      if (!audioQuality) {
+        const settings = store.get('settings', {});
+        audioQuality = settings.audioQuality || 'high';
+      }
+
+      // Quality format mappings
+      const qualityFormats = {
+        high: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
+        medium: 'bestaudio',
+        low: 'bestaudio[abr<=128]/bestaudio',
+        lowest: 'bestaudio[abr<=64]/bestaudio'
+      };
+
+      const format = qualityFormats[audioQuality] || qualityFormats.high;
+
+      exec(`"${ytdlpPath}" -g -f "${format}" https://www.youtube.com/watch?v=${videoId}`,
         (error, stdout, stderr) => {
           if (error) {
             console.error('[ipc] yt-dlp -g error:', error.message);
