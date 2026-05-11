@@ -1,0 +1,84 @@
+{
+  "name": "aura-music",
+  "version": "1.0.0-beta.1",
+  "description": "Premium ad-free YouTube Music desktop client",
+  "homepage": "https://auramusic.local",
+  "main": "src/main/main.js",
+  "scripts": {
+    "dev": "concurrently --kill-others \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev:renderer": "vite --port 5173",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win",
+    "build:renderer": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "youtube-music",
+    "electron",
+    "music-player"
+  ],
+  "author": "YT Client",
+  "license": "MIT",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "vite": "^6.0.6",
+    "wait-on": "^8.0.3"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "electron-store": "^8.2.0",
+    "express": "^4.21.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ytmusic-api": "^5.1.1"
+  },
+  "build": {
+    "appId": "com.auramusic.app",
+    "productName": "Aura Music",
+    "icon": "build/icon.png",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "src/main/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Audio",
+      "maintainer": "YT Client <info@auramusic.com>"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "extraResources": [
+      {
+        "from": "resources/",
+        "to": "resources/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}
