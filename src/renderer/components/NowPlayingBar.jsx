@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { usePlayer } from '../store/PlayerContext.jsx';
 import { useLibrary } from '../store/LibraryContext.jsx';
 
@@ -9,10 +9,27 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
+const QUALITY_LABELS = {
+  high: 'HQ',
+  medium: 'MQ',
+  low: 'LQ',
+  lowest: 'LQ'
+};
+
 export default function NowPlayingBar({ onSeek }) {
   const { state, dispatch } = usePlayer();
   const { localFavorites = [], addLocalFavorite, removeLocalFavorite } = useLibrary();
   const progressRef = useRef(null);
+  const [audioQuality, setAudioQuality] = useState('high');
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!window.ytClient?.getSettings) return;
+      const settings = await window.ytClient.getSettings();
+      if (settings?.audioQuality) setAudioQuality(settings.audioQuality);
+    };
+    loadSettings();
+  }, []);
 
   const track = state.currentTrack;
   const isFavorite = track ? localFavorites.some(t => t.videoId === track.videoId) : false;
@@ -113,7 +130,7 @@ export default function NowPlayingBar({ onSeek }) {
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
             </button>
-            <div className="npb-quality-badge">HQ</div>
+            <div className="npb-quality-badge">{QUALITY_LABELS[audioQuality] || 'HQ'}</div>
           </>
         ) : (
           <div className="npb-empty">
