@@ -52,21 +52,43 @@ function AppShell() {
 
     // --- OS Media Session API (Linux MPRIS + Windows media overlay) ---
     if ('mediaSession' in navigator && state.currentTrack) {
-      const track = state.currentTrack;
-      const artwork = [];
-      if (track.thumbnails?.length) {
-        track.thumbnails.forEach(t => {
-          if (t?.url) artwork.push({ src: t.url, sizes: '512x512', type: 'image/jpeg' });
+      const updateMediaMetadata = async () => {
+        const track = state.currentTrack;
+        let artworkUrl = null;
+        if (track.thumbnails?.length) {
+          artworkUrl = track.thumbnails[track.thumbnails.length - 1]?.url;
+        } else if (track.videoId) {
+          artworkUrl = `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        }
+
+        let artwork = [];
+        if (artworkUrl) {
+          try {
+            const res = await fetch(artworkUrl);
+            const blob = await res.blob();
+            const base64Url = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result);
+              reader.readAsDataURL(blob);
+            });
+            artwork = [{ src: base64Url, sizes: '512x512', type: blob.type || 'image/jpeg' }];
+          } catch (e) {
+            console.warn('Failed to load artwork for MediaSession', e);
+            artwork = [{ src: artworkUrl, sizes: '512x512', type: 'image/jpeg' }];
+          }
+        }
+
+        if (isCancelled) return;
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: track.name || 'Unknown Track',
+          artist: track.artist?.name || track.artists?.[0]?.name || 'Unknown Artist',
+          album: track.album?.name || '',
+          artwork,
         });
-      } else if (track.videoId) {
-        artwork.push({ src: `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`, sizes: '480x360', type: 'image/jpeg' });
-      }
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.name || 'Unknown Track',
-        artist: track.artist?.name || track.artists?.[0]?.name || 'Unknown Artist',
-        album: track.album?.name || '',
-        artwork,
-      });
+      };
+      
+      updateMediaMetadata();
     }
 
     return () => {
