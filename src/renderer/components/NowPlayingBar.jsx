@@ -21,6 +21,7 @@ export default function NowPlayingBar({ onSeek }) {
   const { localFavorites = [], addLocalFavorite, removeLocalFavorite } = useLibrary();
   const progressRef = useRef(null);
   const [audioQuality, setAudioQuality] = useState('high');
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -52,6 +53,25 @@ export default function NowPlayingBar({ onSeek }) {
     } else {
       alert(`Download failed for: ${track.name}`);
     }
+  };
+
+  const handleShare = () => {
+    if (!track?.videoId) return;
+    const url = `https://music.youtube.com/watch?v=${track.videoId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }).catch(() => {
+      // Fallback for environments without clipboard API
+      const el = document.createElement('textarea');
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    });
   };
 
   const handleProgressClick = (e) => {
@@ -130,6 +150,20 @@ export default function NowPlayingBar({ onSeek }) {
                 <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
               </svg>
             </button>
+            {/* Share button */}
+            <div className="npb-share-wrap">
+              <button 
+                className={`ctrl-btn ${copied ? 'ctrl-btn--active' : ''}`}
+                onClick={handleShare}
+                title="Share Song Link"
+                style={{ color: copied ? 'var(--accent-color)' : 'var(--text-secondary)', marginLeft: '-8px' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/>
+                </svg>
+              </button>
+              {copied && <div className="npb-copied-toast">Copied!</div>}
+            </div>
             <div className="npb-quality-badge">{QUALITY_LABELS[audioQuality] || 'HQ'}</div>
           </>
         ) : (

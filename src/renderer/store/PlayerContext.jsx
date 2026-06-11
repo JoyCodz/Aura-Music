@@ -90,10 +90,10 @@ function playerReducer(state, action) {
       return { ...state, queue: newQueue };
     }
     case 'SET_VIEW':
-      return { 
-        ...state, 
+      return {
+        ...state,
         currentView: action.payload.view || action.payload,
-        viewData: action.payload.data || null 
+        viewData: action.payload.data || null,
       };
     case 'TOGGLE_QUEUE':
       return { ...state, queueOpen: !state.queueOpen };
