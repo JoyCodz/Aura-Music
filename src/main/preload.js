@@ -67,6 +67,9 @@ contextBridge.exposeInMainWorld('ytClient', {
   // Thumbnail proxy URL
   getThumbnailUrl: (videoId) => ipcRenderer.invoke('get-thumbnail-url', videoId),
 
+  // Lyrics
+  getLyrics: (track) => ipcRenderer.invoke('get-lyrics', track),
+
   // App Info & Updates
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),

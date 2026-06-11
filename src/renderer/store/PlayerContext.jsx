@@ -17,6 +17,7 @@ const initialState = {
   queueOpen: false,
   authModalOpen: false,
   aboutModalOpen: false,
+  lyricsOpen: false,
 };
 
 function playerReducer(state, action) {
@@ -90,13 +91,15 @@ function playerReducer(state, action) {
       return { ...state, queue: newQueue };
     }
     case 'SET_VIEW':
-      return { 
-        ...state, 
+      return {
+        ...state,
         currentView: action.payload.view || action.payload,
-        viewData: action.payload.data || null 
+        viewData: action.payload.data || null,
       };
     case 'TOGGLE_QUEUE':
       return { ...state, queueOpen: !state.queueOpen };
+    case 'TOGGLE_LYRICS':
+      return { ...state, lyricsOpen: !state.lyricsOpen, queueOpen: state.lyricsOpen ? state.queueOpen : false };
     case 'TOGGLE_AUTH_MODAL':
       return { ...state, authModalOpen: !state.authModalOpen };
     case 'TOGGLE_ABOUT_MODAL':
