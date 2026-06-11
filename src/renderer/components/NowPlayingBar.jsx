@@ -268,6 +268,18 @@ export default function NowPlayingBar({ onSeek }) {
       {/* Volume & Queue */}
       <div className="npb-right">
         <button
+          className={`ctrl-btn ${state.lyricsOpen ? 'ctrl-btn--active' : ''}`}
+          onClick={() => dispatch({ type: 'TOGGLE_LYRICS' })}
+          title="Lyrics"
+          disabled={!track}
+        >
+          {/* Lyrics icon: text lines with music note */}
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6zM10 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+          </svg>
+        </button>
+
+        <button
           className={`ctrl-btn ${state.queueOpen ? 'ctrl-btn--active' : ''}`}
           onClick={() => dispatch({ type: 'TOGGLE_QUEUE' })}
           title="Queue"

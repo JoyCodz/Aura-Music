@@ -10,12 +10,18 @@ import FavoritesView from './components/FavoritesView.jsx';
 import ArtistView from './components/ArtistView.jsx';
 import NowPlayingBar from './components/NowPlayingBar.jsx';
 import QueuePanel from './components/QueuePanel.jsx';
+import LyricsPanel from './components/LyricsPanel.jsx';
 import AuthModal from './components/AuthModal.jsx';
 import AboutModal from './components/AboutModal.jsx';
 
 function AppShell() {
   const { state, dispatch } = usePlayer();
   const audioRef = useRef(null);
+
+  // Expose audioRef globally so LyricsPanel can seek on line click
+  useEffect(() => {
+    window.__audioRef = audioRef;
+  }, []);
 
   // Sync audio element with player state
   // We also track a "playKey" so repeat-one (same videoId) still triggers a re-fetch.
@@ -182,6 +188,7 @@ function AppShell() {
         </main>
 
         {state.queueOpen && <QueuePanel />}
+        {state.lyricsOpen && <LyricsPanel />}
       </div>
 
       <NowPlayingBar onSeek={handleSeek} />

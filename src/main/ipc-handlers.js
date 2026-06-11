@@ -382,6 +382,72 @@ function registerIpcHandlers(streamPort) {
   ipcMain.handle('open-external', (_, url) => {
     shell.openExternal(url);
   });
+
+  // --- Lyrics (lrclib.net) ---
+  ipcMain.handle('get-lyrics', async (_, track) => {
+    try {
+      const trackName = track.name || track.title || '';
+      const artistName = track.artist?.name || track.artists?.[0]?.name || '';
+      const albumName = track.album?.name || '';
+      const duration = track.duration ? Math.round(track.duration) : undefined;
+
+      // Strategy 1: /api/get with full metadata (most accurate — uses duration to avoid wrong covers)
+      if (trackName && artistName && duration) {
+        const params = new URLSearchParams({
+          track_name: trackName,
+          artist_name: artistName,
+          ...(albumName ? { album_name: albumName } : {}),
+          duration: String(duration),
+        });
+        const res = await axios.get(`https://lrclib.net/api/get?${params}`, {
+          headers: { 'User-Agent': 'AuraMusic/1.0 (https://github.com/JoyCodz/Aura-Music)' },
+          timeout: 8000,
+        }).catch(() => null);
+
+        if (res?.data && (res.data.syncedLyrics || res.data.plainLyrics)) {
+          return {
+            synced: res.data.syncedLyrics || null,
+            plain: res.data.plainLyrics || null,
+            source: 'lrclib',
+          };
+        }
+      }
+
+      // Strategy 2: /api/search fallback (keyword search)
+      if (trackName) {
+        const q = [trackName, artistName].filter(Boolean).join(' ');
+        const searchRes = await axios.get(`https://lrclib.net/api/search`, {
+          params: { q },
+          headers: { 'User-Agent': 'AuraMusic/1.0 (https://github.com/JoyCodz/Aura-Music)' },
+          timeout: 8000,
+        }).catch(() => null);
+
+        if (searchRes?.data?.length > 0) {
+          // Pick best match: prefer one with synced lyrics and closest duration
+          const results = searchRes.data;
+          let best = results.find(r => r.syncedLyrics) || results[0];
+          if (duration) {
+            const withSynced = results.filter(r => r.syncedLyrics);
+            if (withSynced.length > 0) {
+              best = withSynced.reduce((a, b) =>
+                Math.abs((a.duration || 0) - duration) < Math.abs((b.duration || 0) - duration) ? a : b
+              );
+            }
+          }
+          return {
+            synced: best.syncedLyrics || null,
+            plain: best.plainLyrics || null,
+            source: 'lrclib',
+          };
+        }
+      }
+
+      return { synced: null, plain: null, source: null };
+    } catch (err) {
+      console.warn('[ipc] getLyrics error:', err.message);
+      return { synced: null, plain: null, source: null };
+    }
+  });
 }
 
 module.exports = { registerIpcHandlers };
