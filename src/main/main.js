@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, globalShortcut, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { startStreamServer } = require('./stream-server');
 const { registerIpcHandlers } = require('./ipc-handlers');
@@ -65,16 +65,7 @@ app.whenReady().then(async () => {
 
   await createWindow();
 
-  // Media key shortcuts
-  globalShortcut.register('MediaPlayPause', () => {
-    mainWindow?.webContents.send('media-key', 'playpause');
-  });
-  globalShortcut.register('MediaNextTrack', () => {
-    mainWindow?.webContents.send('media-key', 'next');
-  });
-  globalShortcut.register('MediaPreviousTrack', () => {
-    mainWindow?.webContents.send('media-key', 'prev');
-  });
+
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -82,6 +73,5 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  globalShortcut.unregisterAll();
   if (process.platform !== 'darwin') app.quit();
 });
